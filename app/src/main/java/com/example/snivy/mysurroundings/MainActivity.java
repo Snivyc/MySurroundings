@@ -3,14 +3,20 @@ package com.example.snivy.mysurroundings;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+
 import android.os.Bundle;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -20,6 +26,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +39,7 @@ import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.MapPoi;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
@@ -38,7 +47,11 @@ import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MarkerOptions;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.map.Text;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.navi.BaiduMapAppNotSupportNaviException;
+import com.baidu.mapapi.navi.BaiduMapNavigation;
+import com.baidu.mapapi.navi.NaviParaOption;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +75,13 @@ public class MainActivity extends AppCompatActivity
 
     private PointSet mPointSet;
 
+    private View mBottomLayout;
+    private BottomSheetBehavior mBottomSheetBehavior;
+
+    public int clickedPointID;
+
+    private boolean isPointClicked;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         mLocationClient = new LocationClient(getApplicationContext());
@@ -72,14 +92,18 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BDLocation location= mLocationClient.getLastKnownLocation();
+                LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+                MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+                baiduMap.animateMapStatus(update);
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-//            }
-//        });
+            }
+        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -114,13 +138,74 @@ public class MainActivity extends AppCompatActivity
         }
 
 
+        View pointInfo = findViewById(R.id.point_info);
+        pointInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                move_to_clicked_point();
+            }
+        });
+
+        View satnavButton = findViewById(R.id.point_satnav_button);
+        satnavButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BDLocation location= mLocationClient.getLastKnownLocation();
+                LatLng myll = new LatLng(location.getLatitude(), location.getLongitude());
+                Point point = mPointSet.getPoint(clickedPointID);
+                LatLng toll = new LatLng(point.x, point.y);
+                NaviParaOption para = new NaviParaOption()
+                        .startPoint(myll).endPoint(toll);
+                try {
+                    BaiduMapNavigation.openBaiduMapWalkNavi(para, MainActivity.this);
+                } catch (BaiduMapAppNotSupportNaviException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
+
+        mBottomLayout = findViewById(R.id.bottom_sheet);
+        //2.把这个底部菜单和一个BottomSheetBehavior关联起来
+        mBottomSheetBehavior = BottomSheetBehavior.from(mBottomLayout);
+
+
+        isPointClicked = false;
         mPointSet = new PointSet();
         printPoints(mPointSet.getAllPoints());
         baiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Toast.makeText(MainActivity.this,  "被点击了！", Toast.LENGTH_SHORT).show();
+                point_clicked(marker.getExtraInfo().getInt("ID"));
                 return true;
+            }
+        });
+        baiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if (isPointClicked == true) {
+                    isPointClicked = false;
+//                    Toast.makeText(MainActivity.this,  "没被点击！", Toast.LENGTH_SHORT).show();
+                    undo_point_clicked();
+//                    mBottomSheetBehavior.setHideable(true);
+//                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+//                    View tView = findViewById(R.id.point_info_layout);
+//                    tView.setVisibility(View.GONE);
+//                    tView = findViewById(R.id.recycle_view);
+//                    tView.setVisibility(View.VISIBLE);
+//                    tView = findViewById(R.id.show_list);
+//                    tView.setVisibility(View.VISIBLE);
+//                    float scale = MainActivity.this.getResources().getDisplayMetrics().density;
+//                    mBottomSheetBehavior.setPeekHeight((int)(50 * scale + 0.5f));
+//                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+//                    mBottomSheetBehavior.setHideable(false);
+                }
+            }
+
+            @Override
+            public boolean onMapPoiClick(MapPoi mapPoi) {
+                return false;
             }
         });
 
@@ -128,8 +213,60 @@ public class MainActivity extends AppCompatActivity
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycle_view);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        InformationAdapter adapter = new InformationAdapter(mPointSet.getAllPoints());
+        InformationAdapter adapter = new InformationAdapter(mPointSet.getAllPoints(), mLocationClient,this);
         recyclerView.setAdapter(adapter);
+        recyclerView.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL)
+        {
+
+        });
+    }
+
+    public void move_to_clicked_point() {
+        Point point = mPointSet.getPoint(clickedPointID);
+        LatLng ll = new LatLng(point.x, point.y);
+        MapStatusUpdate update = MapStatusUpdateFactory.newLatLngZoom(ll,16f);
+        baiduMap.animateMapStatus(update);
+    }
+
+    public void point_clicked(int ID) {
+        clickedPointID = ID;
+        if (isPointClicked == false) {
+//                    Toast.makeText(MainActivity.this,  "被点击了！", Toast.LENGTH_SHORT).show();
+            isPointClicked = true;
+            mBottomSheetBehavior.setHideable(true);
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+            View tView = findViewById(R.id.point_info_layout);
+            tView.setVisibility(View.VISIBLE);
+            tView = findViewById(R.id.recycle_view);
+            tView.setVisibility(View.GONE);
+            tView = findViewById(R.id.show_list);
+            tView.setVisibility(View.GONE);
+            TextView textView = findViewById(R.id.point_info);
+            textView.setText(mPointSet.getPoint(clickedPointID).getInformation());
+            mBottomSheetBehavior.setPeekHeight(216);
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            mBottomSheetBehavior.setHideable(false);
+        } else {
+            TextView textView = findViewById(R.id.point_info);
+            textView.setText(mPointSet.getPoint(clickedPointID).getInformation());
+        }
+    }
+
+    public void undo_point_clicked(){
+        mBottomSheetBehavior.setHideable(true);
+        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        isPointClicked = false;
+        View tView = findViewById(R.id.point_info_layout);
+        tView.setVisibility(View.GONE);
+        tView = findViewById(R.id.recycle_view);
+        tView.setVisibility(View.VISIBLE);
+        tView = findViewById(R.id.show_list);
+        tView.setVisibility(View.VISIBLE);
+        float scale = MainActivity.this.getResources().getDisplayMetrics().density;
+        mBottomSheetBehavior.setPeekHeight((int)(50 * scale + 0.5f));
+        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        mBottomSheetBehavior.setHideable(false);
+
     }
 
     @Override
@@ -137,6 +274,10 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
+        } else if (isPointClicked == true) {
+            undo_point_clicked();
+        } else if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         } else {
             super.onBackPressed();
         }
@@ -172,13 +313,6 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_camera) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
 
@@ -191,12 +325,14 @@ public class MainActivity extends AppCompatActivity
 
     private void navigateTo(BDLocation location) {
         if (isFirstLocate) {
-            Toast.makeText(this, "nav to " + location.getAddrStr(), Toast.LENGTH_SHORT).show();
+            Log.e("fuck", "navigateTo: aaa");
+
+//            baiduMap.animateMapStatus(update);
+
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
-            MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+            MapStatusUpdate update = MapStatusUpdateFactory.newLatLngZoom(ll,16f);
             baiduMap.animateMapStatus(update);
-            update = MapStatusUpdateFactory.zoomTo(16f);
-           baiduMap.animateMapStatus(update);
+
             isFirstLocate = false;
         }
         MyLocationData.Builder locationBuilder = new MyLocationData.
@@ -222,7 +358,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        isFirstLocate = true;
         mapView.onResume();
+//        BDLocation location= mLocationClient.getLastKnownLocation();
+//        LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+//        MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+//        baiduMap.animateMapStatus(update);
+
     }
 
     @Override

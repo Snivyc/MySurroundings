@@ -1,6 +1,7 @@
 package com.example.snivy.mysurroundings;
 
 import android.app.Activity;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,8 @@ public class ActivityCollector
         activities.remove(activity);
     }
 
-    public static void finashAll(){
+    public static void finishAll(){
+        Log.e("fuck", "finashAll"+activities.size());
         for (Activity activity : activities) {
             if (!activity.isFinishing()) {
                 activity.finish();

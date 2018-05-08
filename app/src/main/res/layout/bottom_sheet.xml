@@ -11,11 +11,14 @@
     <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp">
 
         <include layout="@layout/content_main" />
 
-        <android.support.v4.widget.NestedScrollView
+
+        <LinearLayout
             android:id="@+id/bottom_sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -26,24 +29,57 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="#eee"
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tv"
+                    android:id="@+id/show_list"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:background="@color/colorPrimaryDark"
                     android:gravity="center"
-                    android:textColor="#fff"
-                    android:text="显示列表"/>
+                    android:text="上划显示列表"
+                    android:textColor="#fff" />
 
                 <android.support.v7.widget.RecyclerView
                     android:id="@+id/recycle_view"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
 
+                <LinearLayout
+                    android:id="@+id/point_info_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#fff"
+                    android:visibility="gone">
+
+
+                    <TextView
+                        android:id="@+id/point_info"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="10dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="fuck"
+                        android:textSize="20sp" />
+
+                    <Button
+                        android:id="@+id/point_satnav_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:background="@color/colorAccent"
+                        android:contextClickable="true"
+                        android:drawableLeft="@drawable/ic_directions_black_24dp"
+                        android:paddingHorizontal="5dp"
+                        android:text="路线"
+                        android:textColor="#fff" />
+
+                </LinearLayout>
             </LinearLayout>
 
-        </android.support.v4.widget.NestedScrollView>
+
+        </LinearLayout>
     </android.support.design.widget.CoordinatorLayout>
 </android.support.constraint.ConstraintLayout>

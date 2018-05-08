@@ -56,12 +56,12 @@ import com.baidu.mapapi.navi.NaviParaOption;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     public LocationClient mLocationClient;
 
-    private TextView positionText;
+//    private TextView positionText;
 
     private MapView mapView;
 
@@ -82,8 +82,10 @@ public class MainActivity extends AppCompatActivity
 
     private boolean isPointClicked;
 
+    private RecyclerView mRecyclerView;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         mLocationClient = new LocationClient(getApplicationContext());
         mLocationClient.registerLocationListener(new MyLocationListener());
         SDKInitializer.initialize(getApplicationContext());
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        //初始化navigationView
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -146,6 +149,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        //初始化定位图标
         View satnavButton = findViewById(R.id.point_satnav_button);
         satnavButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,8 +176,7 @@ public class MainActivity extends AppCompatActivity
 
 
         isPointClicked = false;
-        mPointSet = new PointSet();
-        printPoints(mPointSet.getAllPoints());
+
         baiduMap.setOnMarkerClickListener(new BaiduMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -188,18 +191,6 @@ public class MainActivity extends AppCompatActivity
                     isPointClicked = false;
 //                    Toast.makeText(MainActivity.this,  "没被点击！", Toast.LENGTH_SHORT).show();
                     undo_point_clicked();
-//                    mBottomSheetBehavior.setHideable(true);
-//                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-//                    View tView = findViewById(R.id.point_info_layout);
-//                    tView.setVisibility(View.GONE);
-//                    tView = findViewById(R.id.recycle_view);
-//                    tView.setVisibility(View.VISIBLE);
-//                    tView = findViewById(R.id.show_list);
-//                    tView.setVisibility(View.VISIBLE);
-//                    float scale = MainActivity.this.getResources().getDisplayMetrics().density;
-//                    mBottomSheetBehavior.setPeekHeight((int)(50 * scale + 0.5f));
-//                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-//                    mBottomSheetBehavior.setHideable(false);
                 }
             }
 
@@ -210,15 +201,15 @@ public class MainActivity extends AppCompatActivity
         });
 
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycle_view);
+        //初始化RecyclerView
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycle_view);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-        InformationAdapter adapter = new InformationAdapter(mPointSet.getAllPoints(), mLocationClient,this);
-        recyclerView.setAdapter(adapter);
-        recyclerView.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL)
-        {
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this,DividerItemDecoration.VERTICAL){});
 
-        });
+        //初始化mPointSet
+        mPointSet = new PointSet(this);
+        mPointSet.reflashAllPoints();
     }
 
     public void move_to_clicked_point() {
@@ -243,7 +234,7 @@ public class MainActivity extends AppCompatActivity
             tView.setVisibility(View.GONE);
             TextView textView = findViewById(R.id.point_info);
             textView.setText(mPointSet.getPoint(clickedPointID).getInformation());
-            mBottomSheetBehavior.setPeekHeight(216);
+            mBottomSheetBehavior.setPeekHeight(500);
             mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             mBottomSheetBehavior.setHideable(false);
         } else {
@@ -314,8 +305,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_camera) {
             // Handle the camera action
 
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_quit) {
+            Intent intent = new Intent("com.example.snivy.mysurroundings.FORCE_OFFLINE");
+            sendBroadcast(intent);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -325,7 +317,7 @@ public class MainActivity extends AppCompatActivity
 
     private void navigateTo(BDLocation location) {
         if (isFirstLocate) {
-            Log.e("fuck", "navigateTo: aaa");
+//            Log.e("fuck", "navigateTo: aaa");
 
 //            baiduMap.animateMapStatus(update);
 
@@ -352,6 +344,7 @@ public class MainActivity extends AppCompatActivity
         LocationClientOption option = new LocationClientOption();
         option.setScanSpan(5000);
         option.setIsNeedAddress(true);
+        option.setCoorType("bd09ll");
         mLocationClient.setLocOption(option);
     }
 
@@ -430,8 +423,8 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void printPoints(List<Point> points) {
-
+    public void printPoints() {
+        List<Point> points = mPointSet.getAllPoints();
         for (int i = 0; i < points.size(); i++) {
             LatLng bPoint = new LatLng(points.get(i).x, points.get(i).y);
             BitmapDescriptor bitmap = BitmapDescriptorFactory
@@ -446,5 +439,8 @@ public class MainActivity extends AppCompatActivity
             bundle.putInt("ID", i);
             marker.setExtraInfo(bundle);
         }
+
+        InformationAdapter adapter = new InformationAdapter(mPointSet.getAllPoints(), mLocationClient,this);
+        mRecyclerView.setAdapter(adapter);
     }
 }

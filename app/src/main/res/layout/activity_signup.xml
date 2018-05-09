@@ -19,7 +19,6 @@
         android:layout_width="match_parent"
         android:layout_height="60dp">
 
-
         <TextView
             android:layout_width="100dp"
             android:layout_height="wrap_content"
@@ -47,7 +46,7 @@
             android:layout_gravity="center_vertical"
             android:gravity="right"
             android:textSize="18sp"
-            android:text="密码：" />
+            android:text="密码："/>
 
         <EditText
             android:id="@+id/password"
@@ -83,7 +82,6 @@
     <Button
         android:id="@+id/signup2"
         android:layout_width="match_parent"
-
         android:layout_height="60dp"
         android:text="注册" />
 </LinearLayout>

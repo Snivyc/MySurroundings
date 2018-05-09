@@ -1,9 +1,12 @@
 package com.example.snivy.mysurroundings;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,17 +34,26 @@ public class SignupActivity extends AppCompatActivity {
 
     private String account;
 
+    private ProgressDialog mProgressDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
         signup = findViewById(R.id.signup2);
         accountEdit = findViewById(R.id.account);
         passwordEdit = findViewById(R.id.password);
         rePasswordEdit = findViewById(R.id.re_password);
+
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage("正在登陆...");
+        mProgressDialog.setCancelable(false);
         signup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 password = passwordEdit.getText().toString();
                 account = accountEdit.getText().toString();
                 if (!password.equals(rePasswordEdit.getText().toString())) {
@@ -53,6 +65,7 @@ public class SignupActivity extends AppCompatActivity {
                     Toast.makeText(SignupActivity.this, "密码不符合要求", Toast.LENGTH_SHORT).show();
                 } else {
 //                    Toast.makeText(SignupActivity.this, "密码相同", Toast.LENGTH_SHORT).show();
+
                     sendRequestWithOkHttp();
                 }
 //                mProgressDialog.show();
@@ -61,7 +74,19 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return false;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void sendRequestWithOkHttp() {
+        mProgressDialog.show();
 
 
         new Thread(new Runnable() {
@@ -101,6 +126,7 @@ public class SignupActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                mProgressDialog.cancel();
 
                 if (SignupInfo.isSuccess) {
 //                    editor = pref.edit();

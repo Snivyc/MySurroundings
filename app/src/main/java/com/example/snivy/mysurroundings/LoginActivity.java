@@ -58,7 +58,7 @@ public class LoginActivity extends BaseActivity{
         rememberPass = findViewById(R.id.rember_pass);
         mProgressDialog = new ProgressDialog(LoginActivity.this);
         mProgressDialog.setMessage("正在登陆...");
-        mProgressDialog.setCancelable(true);
+        mProgressDialog.setCancelable(false);
         boolean isRemember = pref.getBoolean("remember_password", false);
         if (isRemember) {
             String account = pref.getString("account", "");
@@ -118,17 +118,22 @@ public class LoginActivity extends BaseActivity{
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                String account = accountEdit.getText().toString();
+                String password = passwordEdit.getText().toString();
                 mProgressDialog.cancel();
                 if (loginInfo.isSuccess) {
                     editor = pref.edit();
                     if (rememberPass.isChecked()) {
                         editor.putBoolean("remember_password", true);
-                        editor.putString("account", accountEdit.getText().toString());
-                        editor.putString("password", passwordEdit.getText().toString());
+                        editor.putString("account", account);
+                        editor.putString("password", password);
                     } else {
                         editor.clear();
                     }
                     editor.apply();
+                    MyApp myApp = ((MyApp)getApplicationContext());
+                    myApp.setAccount(account);
+                    myApp.setPassword(password);
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();

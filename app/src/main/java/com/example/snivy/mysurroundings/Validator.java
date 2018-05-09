@@ -118,5 +118,4 @@ public class Validator {
     public static boolean isIPAddress(String ipAddress) {
         return Pattern.matches(REGEX_IP_ADDR, ipAddress);
     }
-
 }

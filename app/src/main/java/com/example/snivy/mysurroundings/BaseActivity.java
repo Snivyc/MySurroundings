@@ -24,7 +24,6 @@ public class BaseActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ActivityCollector.addActivitty(this);
-        Log.e("fuck", "onCreate: addact");
     }
 
     @Override
@@ -55,19 +54,18 @@ public class BaseActivity extends AppCompatActivity {
         @Override
         public void onReceive(final Context context, Intent intent) {
 
-            Log.e("fuck", "onClick: 0");
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("Waring");
-            builder.setMessage("forced to be offline");
+            builder.setTitle("提醒");
+            builder.setMessage("强制退出登录");
             builder.setCancelable(false);
             builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    Log.e("fuck", "onClick: 1");
+
                     ActivityCollector.finishAll();
-                    Log.e("fuck", "onClick: 2");
+
                     Intent intent = new Intent(context, LoginActivity.class);
-                    Log.e("fuck", "onClick: 3");
+
                     context.startActivity(intent);
                 }
             });

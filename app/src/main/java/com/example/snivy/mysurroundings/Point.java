@@ -7,6 +7,7 @@ package com.example.snivy.mysurroundings;
 class Point{
     public double x, y;
     private String information;
+    private int distance;
 
     Point(double x, double y, String i) {
         this.x = x;
@@ -28,5 +29,13 @@ class Point{
 
     public String getInformation(){
         return information;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
     }
 }

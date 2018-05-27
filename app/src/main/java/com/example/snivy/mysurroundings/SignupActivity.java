@@ -36,10 +36,13 @@ public class SignupActivity extends AppCompatActivity {
 
     private ProgressDialog mProgressDialog;
 
+    private MyApp myApp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+        myApp = (MyApp)getApplicationContext();
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         signup = findViewById(R.id.signup2);
@@ -95,12 +98,12 @@ public class SignupActivity extends AppCompatActivity {
                 try {
                     OkHttpClient client = new OkHttpClient();
                     RequestBody requestBody = new FormBody.Builder()
-                            .add("username", accountEdit.getText().toString())
+                            .add("account", accountEdit.getText().toString())
                             .add("password", passwordEdit.getText().toString())
                             .build();
                     Request request = new Request.Builder()
                             // 指定访问的服务器地址是电脑本机
-                            .url("http://192.168.31.119:8080/signup")
+                            .url(myApp.getURL() + "signup")
                             .post(requestBody)
                             .build();
                     Response response = client.newCall(request).execute();
@@ -121,29 +124,16 @@ public class SignupActivity extends AppCompatActivity {
 
     private void parseJSONWithGSON(String jsonData) {
         Gson gson = new Gson();
-        final SignupActivity.SignupInfo SignupInfo = gson.fromJson(jsonData, SignupInfo.class);
-
+        final SignupActivity.SignupInfo signupInfo = gson.fromJson(jsonData, SignupInfo.class);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 mProgressDialog.cancel();
-
-                if (SignupInfo.isSuccess) {
-//                    editor = pref.edit();
-//                    if (rememberPass.isChecked()) {
-//                        editor.putBoolean("remember_password", true);
-//                        editor.putString("account", accountEdit.getText().toString());
-//                        editor.putString("password", passwordEdit.getText().toString());
-//                    } else {
-//                        editor.clear();
-//                    }
-//                    editor.apply();
-//                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-//                    startActivity(intent);
+                if (signupInfo.isSuccess) {
                     Toast.makeText(SignupActivity.this, "注册成功", Toast.LENGTH_SHORT).show();
                     finish();
                 } else {
-                    Toast.makeText(SignupActivity.this, "注册失败", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SignupActivity.this, "注册失败 "+signupInfo.errorInformation, Toast.LENGTH_SHORT).show();
 //                    mProgressDialog.hide();
                 }
             }

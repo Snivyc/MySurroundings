@@ -7,6 +7,18 @@ class MyApp extends Application {
 
     private String password;
 
+    private int ID;
+
+    private String URL;
+
+    public int getID() {
+        return ID;
+    }
+
+    public void setID(int ID) {
+        this.ID = ID;
+    }
+
     public String getAccount() {
         return account;
     }
@@ -22,4 +34,17 @@ class MyApp extends Application {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public String getURL() {
+        return URL;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        URL = getResources().getString(R.string.url);
+    }
+
+
+
 }

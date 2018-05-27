@@ -1,6 +1,7 @@
 package com.example.snivy.mysurroundings;
 
 import android.content.Context;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,12 +35,14 @@ public class InformationAdapter extends RecyclerView.Adapter<InformationAdapter.
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView infoView;
         Button button;
+        TextView distanceView;
 
 
         public ViewHolder(View view) {
             super(view);
             infoView = (TextView) view.findViewById(R.id.item_info);
             button = (Button) view.findViewById(R.id.item_satnav_button);
+            distanceView = (TextView) view.findViewById(R.id.item_distance);
         }
 
     }
@@ -59,7 +62,8 @@ public class InformationAdapter extends RecyclerView.Adapter<InformationAdapter.
             public void onClick(View view) {
                 int position = holder.getAdapterPosition();
                 Point point = mPointList.get(position);
-                Toast.makeText(view.getContext(), "you clicked view" + point.getInformation(), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(view.getContext(), "you clicked view" + point.getInformation(), Toast.LENGTH_SHORT).show();
+                mContext.mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 mContext.point_clicked(position);
                 mContext.move_to_clicked_point();
             }
@@ -72,15 +76,9 @@ public class InformationAdapter extends RecyclerView.Adapter<InformationAdapter.
                 LatLng myll = new LatLng(location.getLatitude(), location.getLongitude());
                 int position = holder.getAdapterPosition();
                 Point point = mPointList.get(position);
-                LatLng toll = new LatLng(point.x, point.y);
-                NaviParaOption para = new NaviParaOption()
-                        .startPoint(myll).endPoint(toll);
-                try {
-
-                    BaiduMapNavigation.openBaiduMapWalkNavi(para, mContext);
-                } catch (BaiduMapAppNotSupportNaviException e) {
-                    e.printStackTrace();
-                }
+                mContext.point_clicked(position);
+                mContext.move_to_clicked_point();
+                mContext.mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         });
         return holder;
@@ -89,6 +87,7 @@ public class InformationAdapter extends RecyclerView.Adapter<InformationAdapter.
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.infoView.setText(mPointList.get(position).getInformation());
+        holder.distanceView.setText(String.valueOf(mPointList.get(position).getDistance())+"m");
     }
 
     @Override

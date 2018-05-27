@@ -46,11 +46,14 @@ public class LoginActivity extends BaseActivity{
 
     private CheckBox rememberPass;
 
+    private MyApp myApp;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        pref = PreferenceManager.getDefaultSharedPreferences(this);
+        myApp = (MyApp)getApplicationContext();
+
         accountEdit = findViewById(R.id.account);
         passwordEdit = findViewById(R.id.password);
         login = findViewById(R.id.login);
@@ -59,6 +62,8 @@ public class LoginActivity extends BaseActivity{
         mProgressDialog = new ProgressDialog(LoginActivity.this);
         mProgressDialog.setMessage("正在登陆...");
         mProgressDialog.setCancelable(false);
+
+        pref = PreferenceManager.getDefaultSharedPreferences(this);
         boolean isRemember = pref.getBoolean("remember_password", false);
         if (isRemember) {
             String account = pref.getString("account", "");
@@ -95,7 +100,7 @@ public class LoginActivity extends BaseActivity{
                             .build();
                     Request request = new Request.Builder()
                             // 指定访问的服务器地址是电脑本机
-                            .url("http://192.168.31.119:8080/login")
+                            .url(myApp.getURL() + "login")
                             .post(requestBody)
                             .build();
                     Response response = client.newCall(request).execute();
@@ -131,9 +136,9 @@ public class LoginActivity extends BaseActivity{
                         editor.clear();
                     }
                     editor.apply();
-                    MyApp myApp = ((MyApp)getApplicationContext());
                     myApp.setAccount(account);
                     myApp.setPassword(password);
+                    myApp.setID(loginInfo.ID);
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
@@ -147,5 +152,7 @@ public class LoginActivity extends BaseActivity{
 
     public class LoginInfo {
         public boolean isSuccess;
+        public String errorInformation;
+        public int ID;
     }
 }
